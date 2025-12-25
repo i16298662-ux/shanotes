@@ -3,94 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHA-Notes Security Lab</title>
+    <title>SHA-Notes Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        :root { --primary: #00ff9d; --danger: #ff4444; --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', monospace; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .app-container { background: var(--panel); width: 100%; max-width: 800px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #333; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        :root { --primary: #00ff9d; --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .app-container { background: var(--panel); width: 90%; max-width: 700px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #333; }
+        h2 { color: var(--primary); margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .badge { font-size: 0.5em; background: #333; padding: 3px 8px; border-radius: 4px; color: #fff; }
         
-        h2 { grid-column: 1 / -1; color: var(--primary); margin: 0 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .col { display: flex; flex-direction: column; gap: 15px; }
-
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .full-row { margin-bottom: 15px; }
+        
         label { display: block; font-size: 0.85em; color: #aaa; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; background: #2d2d2d; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; box-sizing: border-box; outline: none; }
-        textarea { height: 150px; resize: vertical; font-family: 'Courier New', monospace; }
+        input, select, textarea { width: 100%; background: #2d2d2d; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        textarea { height: 300px; font-family: 'Courier New', monospace; resize: vertical; }
         
-        button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #121212; width: 100%; margin-top: 5px; }
-        .btn-save { background: var(--primary); } .btn-save:hover { background: #00cc7a; }
-        .btn-open { background: #4dabf7; } .btn-open:hover { background: #3b8dd1; }
-        .btn-hack { background: var(--danger); color: white; } .btn-hack:hover { background: #cc0000; }
-
-        /* Terminal Style for Brute Force */
-        .terminal {
-            background: #000;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8em;
-            height: 250px;
-            overflow-y: auto;
-            color: #0f0;
-            white-space: pre-wrap;
-        }
-        .status-bar { grid-column: 1 / -1; margin-top: 10px; font-size: 0.85em; color: #666; text-align: right; border-top: 1px solid #333; padding-top: 10px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #121212; }
+        .btn-save { background: var(--primary); } 
+        .btn-save:hover { background: #00cc7a; }
+        .btn-open { background: #4dabf7; } 
+        .btn-open:hover { background: #3b8dd1; }
+        .btn-clear { background: #ff6b6b; color: white; } 
+        .btn-clear:hover { background: #e05252; }
         
+        .status-bar { margin-top: 15px; font-size: 0.85em; color: #666; text-align: right; }
         #fileInput { display: none; }
-        
-        /* Mobile responsive */
-        @media (max-width: 700px) { .app-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <h2>SHA-Notes <span style="font-size:0.5em; background:#333; padding:2px 6px; border-radius:4px;">v3.0 Security Lab</span></h2>
+    <h2>SHA-Notes <span class="badge">v2.0 Secure</span></h2>
 
-    <!-- KOLOM KIRI: EDITOR -->
-    <div class="col">
+    <div class="grid-row">
         <div>
-            <label>Algoritma Hash</label>
+            <label>Nama File (Opsional)</label>
+            <input type="text" id="filename" placeholder="cth: rahasia_bank">
+        </div>
+        <div>
+            <label>Algoritma Hash (Key)</label>
             <select id="algo">
-                <option value="SHA512">SHA-512 (Standard)</option>
+                <option value="SHA512" selected>SHA-512 (Standard)</option>
                 <option value="SHA256">SHA-256</option>
+                <option value="SHA1">SHA-1 (Legacy)</option>
+                <option value="SHA3">SHA-3 (Modern)</option>
             </select>
         </div>
-        <div>
-            <label>Password Target</label>
-            <input type="password" id="password" placeholder="Password...">
-        </div>
-        <div>
-            <label>Isi Catatan</label>
-            <textarea id="content" placeholder="Data rahasia..."></textarea>
-        </div>
-        <div style="display:flex; gap:5px;">
-            <button class="btn-open" onclick="document.getElementById('fileInput').click()">📂 Buka</button>
-            <button class="btn-save" onclick="processFile('encrypt')">💾 Simpan</button>
-        </div>
     </div>
 
-    <!-- KOLOM KANAN: BRUTE FORCE LAB -->
-    <div class="col" style="border-left: 1px solid #333; padding-left: 20px;">
-        <label style="color:var(--danger)">🔥 Brute Force Simulator</label>
-        <div class="terminal" id="hackLog">
-> SYSTEM READY...
-> Masukkan password di sebelah kiri.
-> Tekan tombol "TEST KEKUATAN" untuk memulai serangan simulasi.
-        </div>
-        <button class="btn-hack" onclick="startBruteForce()">💀 TEST KEKUATAN PASSWORD</button>
-        <div id="strengthResult" style="font-size:0.9em; margin-top:5px;"></div>
+    <div class="full-row">
+        <label>Password Enkripsi</label>
+        <input type="password" id="password" placeholder="Masukkan kunci akses...">
+    </div>
+
+    <div class="full-row">
+        <label>Isi Catatan</label>
+        <textarea id="content" placeholder="Tulis data sensitif di sini..."></textarea>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-open" onclick="document.getElementById('fileInput').click()">📂 Buka File</button>
+        <button class="btn-save" onclick="processFile('encrypt')">💾 Simpan & Enkripsi</button>
+        <button class="btn-clear" onclick="clearFields()">🗑️ Reset</button>
     </div>
     
-    <div class="status-bar" id="status">Siap.</div>
+    <div class="status-bar" id="status">Menunggu input user...</div>
     <input type="file" id="fileInput" onchange="processFile('decrypt', this)">
 </div>
 
 <script>
-    // --- 1. LOGIKA ENKRIPSI (Sama seperti sebelumnya) ---
+    // --- Core Logic ---
     function deriveKey(pass, algoType) {
-        return algoType === 'SHA256' ? CryptoJS.SHA256(pass).toString() : CryptoJS.SHA512(pass).toString();
+        // Mengubah password menjadi hash sesuai algoritma yang dipilih
+        switch(algoType) {
+            case 'SHA512': return CryptoJS.SHA512(pass).toString();
+            case 'SHA256': return CryptoJS.SHA256(pass).toString();
+            case 'SHA1':   return CryptoJS.SHA1(pass).toString();
+            case 'SHA3':   return CryptoJS.SHA3(pass).toString();
+            default:       return CryptoJS.SHA512(pass).toString();
+        }
     }
 
     function processFile(action, fileInput = null) {
@@ -99,117 +93,65 @@
         const status = document.getElementById('status');
 
         if (!pass) { alert("⚠️ Password wajib diisi!"); return; }
+
         const key = deriveKey(pass, algo);
 
-        try {
-            if (action === 'encrypt') {
-                const text = document.getElementById('content').value;
-                if (!text) { alert("Kosong!"); return; }
+        if (action === 'encrypt') {
+            const text = document.getElementById('content').value;
+            if (!text) { alert("⚠️ Catatan kosong!"); return; }
+
+            try {
+                // Enkripsi AES menggunakan Key hasil Hash
                 const encrypted = CryptoJS.AES.encrypt(text, key).toString();
                 
+                // Penamaan File
+                let fname = document.getElementById('filename').value.trim();
+                if (!fname) fname = "sha_note";
+                if (!fname.endsWith('.sha')) fname += ".sha";
+
+                // Download
                 const blob = new Blob([encrypted], { type: "text/plain" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = "secret.sha";
+                link.download = fname;
                 link.click();
-                status.innerText = "✅ File berhasil disimpan.";
-            } 
-            else if (action === 'decrypt') {
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const bytes = CryptoJS.AES.decrypt(e.target.result, key);
-                        const original = bytes.toString(CryptoJS.enc.Utf8);
-                        if (!original) throw new Error();
-                        document.getElementById('content').value = original;
-                        status.innerText = "🔓 File terbuka.";
-                    } catch (err) { alert("❌ Password Salah!"); }
-                };
-                reader.readAsText(file);
-                fileInput.value = "";
-            }
-        } catch (e) { alert("Error: " + e); }
+                
+                status.innerText = `✅ Tersimpan: ${fname} | Algo: ${algo}`;
+            } catch (e) { alert("Error: " + e); }
+        } 
+        else if (action === 'decrypt') {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const cipherText = e.target.result;
+                    const bytes = CryptoJS.AES.decrypt(cipherText, key);
+                    const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+                    if (!originalText) throw new Error("Gagal Dekripsi");
+
+                    document.getElementById('content').value = originalText;
+                    
+                    // Update nama file di input tanpa ekstensi .sha
+                    document.getElementById('filename').value = file.name.replace('.sha', '');
+                    status.innerText = `🔓 Terbuka: ${file.name}`;
+                } catch (err) {
+                    alert("❌ Gagal Membuka!\nKemungkinan Password Salah atau Algoritma Hash tidak cocok.");
+                    status.innerText = "❌ Gagal dekripsi.";
+                }
+            };
+            reader.readAsText(file);
+            fileInput.value = ""; // Reset input file
+        }
     }
 
-    // --- 2. LOGIKA BRUTE FORCE SIMULATOR ---
-    
-    // Daftar pendek password umum (Dictionary Attack)
-    const commonPasswords = [
-        "123456", "password", "12345678", "qwerty", "12345", "123456789", "football", "aaaaaa", "admin", 
-        "123123", "bismillah", "rahasia", "indonesia", "sayang", "cinta", "doraemon", "internet", "master", 
-        "jakarta", "bandung", "anjing", "monyet", "1234567890", "login", "princess", "dragon"
-    ];
-
-    async function startBruteForce() {
-        const targetPass = document.getElementById('password').value;
-        const log = document.getElementById('hackLog');
-        const resDiv = document.getElementById('strengthResult');
-        
-        if (!targetPass) {
-            log.innerHTML += "\n> ERROR: Tidak ada target password.";
-            return;
-        }
-
-        log.innerHTML = "> MEMULAI SERANGAN BRUTE FORCE...\n> Memuat Dictionary...\n";
-        resDiv.innerHTML = "";
-        
-        // 1. Dictionary Attack (Cek password pasaran)
-        for (let i = 0; i < commonPasswords.length; i++) {
-            const attempt = commonPasswords[i];
-            
-            // Efek visual 'Hacking'
-            if (i % 2 === 0) { 
-                log.innerHTML += `> Trying: ${attempt} [FAILED]\n`; 
-                log.scrollTop = log.scrollHeight;
-                await new Promise(r => setTimeout(r, 20)); // Delay agar terlihat animasinya
-            }
-
-            if (attempt === targetPass) {
-                log.innerHTML += `\n> [MATCH FOUND] Password: "${attempt}"\n> CRACKED IN ${i * 0.05} SECONDS!`;
-                log.style.color = "#ff4444";
-                resDiv.innerHTML = "<b style='color:red'>KESIMPULAN: SANGAT LEMAH!</b><br>Password Anda ada di daftar password paling umum sedunia. Segera ganti!";
-                return;
-            }
-        }
-
-        // 2. Jika lolos Dictionary, hitung Entropy (Matematika)
-        log.innerHTML += "\n> Dictionary Attack: GAGAL (Password tidak umum)\n> Menghitung Entropi Bit...\n";
-        calculateEntropy(targetPass, log, resDiv);
-    }
-
-    function calculateEntropy(password, log, resDiv) {
-        let poolSize = 0;
-        if (/[a-z]/.test(password)) poolSize += 26; // Huruf kecil
-        if (/[A-Z]/.test(password)) poolSize += 26; // Huruf besar
-        if (/[0-9]/.test(password)) poolSize += 10; // Angka
-        if (/[^a-zA-Z0-9]/.test(password)) poolSize += 32; // Simbol
-
-        const entropy = Math.log2(Math.pow(poolSize, password.length));
-        
-        // Estimasi waktu crack (Asumsi hacker bisa coba 1 Miliar/detik - GPU Farm)
-        const guessesNeeded = Math.pow(2, entropy);
-        const secondsToCrack = guessesNeeded / 1000000000; 
-
-        let timeString = "";
-        if (secondsToCrack < 60) timeString = "Beberapa Detik";
-        else if (secondsToCrack < 3600) timeString = Math.round(secondsToCrack/60) + " Menit";
-        else if (secondsToCrack < 86400) timeString = Math.round(secondsToCrack/3600) + " Jam";
-        else if (secondsToCrack < 31536000) timeString = Math.round(secondsToCrack/86400) + " Hari";
-        else timeString = Math.round(secondsToCrack/31536000) + " Tahun";
-
-        log.innerHTML += `> Entropy: ${Math.round(entropy)} bits\n`;
-        log.innerHTML += `> Estimated Crack Time: ${timeString}\n`;
-        log.style.color = "#00ff9d";
-        log.scrollTop = log.scrollHeight;
-
-        let conclusion = "";
-        let color = "";
-        if (entropy < 40) { conclusion = "LEMAH"; color = "orange"; }
-        else if (entropy < 60) { conclusion = "CUKUP KUAT"; color = "yellow"; }
-        else { conclusion = "SANGAT KUAT"; color = "#00ff9d"; }
-
-        resDiv.innerHTML = `<b style='color:${color}'>KESIMPULAN: ${conclusion}</b><br>Estimasi Hacker: ${timeString}`;
+    function clearFields() {
+        document.getElementById('content').value = "";
+        document.getElementById('password').value = "";
+        document.getElementById('filename').value = "";
+        document.getElementById('status').innerText = "Siap.";
     }
 </script>
 
