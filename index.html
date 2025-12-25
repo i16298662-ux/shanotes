@@ -1,1230 +1,144 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Block Blast</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        header {
-            text-align: center;
-            padding: 20px 0;
-            width: 100%;
-        }
-        
-        h1 {
-            font-size: 3.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #00dbde, #fc00ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 15px rgba(0, 219, 222, 0.3);
-            letter-spacing: 2px;
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            color: #a0a0ff;
-            margin-bottom: 20px;
-        }
-        
-        .game-area {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .game-board-container {
-            position: relative;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .game-info {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-width: 280px;
-        }
-        
-        .info-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .info-card h2 {
-            color: #00dbde;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid rgba(0, 219, 222, 0.3);
-            padding-bottom: 5px;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ffcc00;
-        }
-        
-        .stat-label {
-            font-size: 0.9rem;
-            color: #a0a0ff;
-        }
-        
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            gap: 2px;
-            width: 500px;
-            height: 500px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-            padding: 5px;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
-        }
-        
-        .cell {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-            transition: all 0.2s ease;
-        }
-        
-        .cell.filled {
-            border-radius: 5px;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .block {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 0;
-            cursor: grab;
-            transition: transform 0.2s;
-        }
-        
-        .block:hover {
-            transform: scale(1.05);
-        }
-        
-        .block.dragging {
-            opacity: 0.8;
-            transform: scale(1.1);
-        }
-        
-        .block-preview {
-            display: grid;
-            gap: 2px;
-            margin-bottom: 8px;
-        }
-        
-        .block-cell {
-            width: 25px;
-            height: 25px;
-            border-radius: 4px;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-        
-        .block-label {
-            font-size: 0.9rem;
-            color: #a0a0ff;
-            margin-top: 5px;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-        
-        .btn {
-            background: linear-gradient(90deg, #00dbde, #0093E9);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 147, 233, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 147, 233, 0.6);
-        }
-        
-        .btn:active {
-            transform: translateY(1px);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(90deg, #56ab2f, #a8e063);
-            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
-        }
-        
-        .game-modes {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .mode-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .mode-btn.active {
-            background: linear-gradient(90deg, #00dbde, #0093E9);
-            box-shadow: 0 0 15px rgba(0, 219, 222, 0.5);
-        }
-        
-        .mode-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .combo-display {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4rem;
-            font-weight: bold;
-            color: #ffcc00;
-            text-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        
-        .achievement-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(90deg, #56ab2f, #a8e063);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateX(400px);
-            transition: transform 0.5s ease;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 300px;
-        }
-        
-        .achievement-toast.show {
-            transform: translateX(0);
-        }
-        
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 50;
-        }
-        
-        footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #a0a0ff;
-            font-size: 0.9rem;
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-        }
-        
-        @media (max-width: 1100px) {
-            .game-area {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            #game-board {
-                width: 400px;
-                height: 400px;
-            }
-            
-            .game-info {
-                width: 100%;
-                max-width: 500px;
-            }
-        }
-        
-        @media (max-width: 500px) {
-            #game-board {
-                width: 320px;
-                height: 320px;
-            }
-            
-            h1 {
-                font-size: 2.5rem;
-            }
-            
-            .btn {
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-        }
-        
-        /* Block colors */
-        .color-1 { background: linear-gradient(135deg, #00dbde, #0093E9); }
-        .color-2 { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
-        .color-3 { background: linear-gradient(135deg, #56ab2f, #a8e063); }
-        .color-4 { background: linear-gradient(135deg, #da22ff, #9733ee); }
-        .color-5 { background: linear-gradient(135deg, #f7971e, #ffd200); }
-        .color-6 { background: linear-gradient(135deg, #36d1dc, #5b86e5); }
-        
-        /* Animation for cleared lines */
-        @keyframes lineClear {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-            100% { transform: scale(0); opacity: 0; }
-        }
-        
-        .clearing {
-            animation: lineClear 0.5s forwards;
-        }
-        
-        /* Shake animation for invalid placement */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        
-        .shake {
-            animation: shake 0.3s ease;
-        }
-        
-        /* Highlight for valid placement */
-        .highlight {
-            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.7), 0 0 10px rgba(0, 255, 0, 0.5);
-        }
-        
-        /* Timer for time attack mode */
-        .timer {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ffcc00;
-            text-align: center;
-            margin: 10px 0;
-        }
-        
-        .timer.warning {
-            color: #ff416c;
-            text-shadow: 0 0 10px rgba(255, 65, 108, 0.7);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>MODERN BLOCK BLAST</h1>
-            <p class="subtitle">Drag & drop blok untuk membuat garis penuh dan dapatkan skor tertinggi!</p>
-        </header>
-        
-        <div class="game-area">
-            <div class="game-board-container">
-                <div id="game-board"></div>
-                <div class="controls">
-                    <button id="undo-btn" class="btn"><i class="fas fa-undo"></i> Undo</button>
-                    <button id="hint-btn" class="btn"><i class="fas fa-lightbulb"></i> Hint</button>
-                    <button id="restart-btn" class="btn btn-danger"><i class="fas fa-redo"></i> Restart</button>
-                </div>
-            </div>
-            
-            <div class="game-info">
-                <div class="info-card">
-                    <h2><i class="fas fa-tachometer-alt"></i> STATS</h2>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value" id="score">0</div>
-                            <div class="stat-label">SCORE</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="level">1</div>
-                            <div class="stat-label">LEVEL</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="lines">0</div>
-                            <div class="stat-label">GARIS</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="combo">1x</div>
-                            <div class="stat-label">COMBO</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <h2><i class="fas fa-gamepad"></i> NEXT BLOCK</h2>
-                    <div id="next-block" class="block"></div>
-                </div>
-                
-                <div class="info-card">
-                    <h2><i class="fas fa-crown"></i> LEADERBOARD</h2>
-                    <div id="leaderboard">
-                        <div class="leaderboard-entry">1. YOU: <span id="current-score">0</span></div>
-                        <div class="leaderboard-entry">2. Player2: 1250</div>
-                        <div class="leaderboard-entry">3. Player3: 980</div>
-                        <div class="leaderboard-entry">4. Player4: 750</div>
-                        <div class="leaderboard-entry">5. Player5: 620</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <h2><i class="fas fa-bolt"></i> GAME MODES</h2>
-                    <div class="game-modes">
-                        <button id="mode-classic" class="mode-btn active">Classic</button>
-                        <button id="mode-time" class="mode-btn">Time Attack</button>
-                        <button id="mode-daily" class="mode-btn">Daily Challenge</button>
-                    </div>
-                    <div id="timer" class="timer" style="display: none;">60s</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="combo-display" id="combo-display"></div>
-        
-        <footer>
-            <p>Modern Block Blast &copy; 2023 | Drag & drop blok ke papan untuk membuat garis penuh!</p>
-            <p>Tips: Buat multiple lines untuk mendapatkan combo multiplier!</p>
-        </footer>
-    </div>
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext
+import hashlib
+import base64
+from cryptography.fernet import Fernet, InvalidToken
+import os
 
-    <script>
-        // Game Configuration
-        const config = {
-            boardSize: 10,
-            colors: ['color-1', 'color-2', 'color-3', 'color-4', 'color-5', 'color-6'],
-            blockShapes: [
-                { name: "I", shape: [[1,1,1,1]], color: 0 },
-                { name: "O", shape: [[1,1],[1,1]], color: 1 },
-                { name: "T", shape: [[1,1,1],[0,1,0]], color: 2 },
-                { name: "L", shape: [[1,0],[1,0],[1,1]], color: 3 },
-                { name: "J", shape: [[0,1],[0,1],[1,1]], color: 4 },
-                { name: "S", shape: [[0,1,1],[1,1,0]], color: 5 },
-                { name: "Z", shape: [[1,1,0],[0,1,1]], color: 0 }
-            ],
-            pointsPerCell: 10,
-            levelUpLines: 5
-        };
-
-        // Game State
-        let gameState = {
-            board: [],
-            score: 0,
-            level: 1,
-            linesCleared: 0,
-            currentBlock: null,
-            nextBlock: null,
-            combo: 0,
-            gameMode: 'classic',
-            gameActive: true,
-            timeLeft: 60,
-            timerInterval: null,
-            lastPlacedBlock: null,
-            blockHistory: []
-        };
-
-        // DOM Elements
-        const gameBoard = document.getElementById('game-board');
-        const scoreElement = document.getElementById('score');
-        const levelElement = document.getElementById('level');
-        const linesElement = document.getElementById('lines');
-        const comboElement = document.getElementById('combo');
-        const nextBlockElement = document.getElementById('next-block');
-        const comboDisplay = document.getElementById('combo-display');
-        const timerElement = document.getElementById('timer');
-        const currentScoreElement = document.getElementById('current-score');
+class SHANotesApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("SHA-Notes (Secure Encryption)")
+        self.root.geometry("600x500")
         
-        // Initialize the game
-        function initGame() {
-            createBoard();
-            generateNewBlock();
-            updateDisplay();
-            setupEventListeners();
-            
-            // Set today's date for daily challenge
-            const today = new Date().toDateString();
-            document.getElementById('mode-daily').textContent = `Daily: ${today.split(' ')[0]}`;
-        }
+        # --- UI Layout ---
+        
+        # Label Judul
+        self.label_title = tk.Label(root, text="SHA-Notes", font=("Arial", 16, "bold"))
+        self.label_title.pack(pady=10)
 
-        // Create the game board
-        function createBoard() {
-            gameBoard.innerHTML = '';
-            gameState.board = [];
-            
-            for (let row = 0; row < config.boardSize; row++) {
-                gameState.board[row] = [];
-                for (let col = 0; col < config.boardSize; col++) {
-                    gameState.board[row][col] = 0;
-                    
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    gameBoard.appendChild(cell);
-                }
-            }
-        }
+        # Input Password Frame
+        self.frame_auth = tk.Frame(root)
+        self.frame_auth.pack(pady=5)
+        
+        tk.Label(self.frame_auth, text="Password Kunci:").pack(side=tk.LEFT, padx=5)
+        self.entry_password = tk.Entry(self.frame_auth, show="*", width=30)
+        self.entry_password.pack(side=tk.LEFT, padx=5)
 
-        // Generate a new random block
-        function generateNewBlock() {
-            if (!gameState.nextBlock) {
-                const randomIndex = Math.floor(Math.random() * config.blockShapes.length);
-                gameState.nextBlock = {...config.blockShapes[randomIndex]};
-            }
-            
-            gameState.currentBlock = gameState.nextBlock;
-            
-            // Generate next block for preview
-            const randomIndex = Math.floor(Math.random() * config.blockShapes.length);
-            gameState.nextBlock = {...config.blockShapes[randomIndex]};
-            
-            updateNextBlockPreview();
-        }
+        # Area Teks Utama
+        self.text_area = scrolledtext.ScrolledText(root, width=70, height=20)
+        self.text_area.pack(pady=10, padx=10)
 
-        // Update the next block preview
-        function updateNextBlockPreview() {
-            nextBlockElement.innerHTML = '';
-            
-            const blockContainer = document.createElement('div');
-            blockContainer.className = 'block';
-            blockContainer.draggable = true;
-            blockContainer.id = 'draggable-block';
-            
-            const preview = document.createElement('div');
-            preview.className = 'block-preview';
-            
-            const block = gameState.currentBlock;
-            const rows = block.shape.length;
-            const cols = block.shape[0].length;
-            
-            // Style the preview grid
-            preview.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-            preview.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-            preview.style.width = `${cols * 30}px`;
-            preview.style.height = `${rows * 30}px`;
-            
-            // Create block cells
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    if (block.shape[row][col]) {
-                        const cell = document.createElement('div');
-                        cell.className = `block-cell ${config.colors[block.color]}`;
-                        preview.appendChild(cell);
-                    }
-                }
-            }
-            
-            const label = document.createElement('div');
-            label.className = 'block-label';
-            label.textContent = `Block: ${block.name}`;
-            
-            blockContainer.appendChild(preview);
-            blockContainer.appendChild(label);
-            nextBlockElement.appendChild(blockContainer);
-            
-            // Make block draggable
-            setupDragAndDrop(blockContainer);
-        }
+        # Tombol Aksi
+        self.frame_buttons = tk.Frame(root)
+        self.frame_buttons.pack(pady=10)
 
-        // Setup drag and drop functionality
-        function setupDragAndDrop(element) {
-            element.addEventListener('dragstart', handleDragStart);
-            element.addEventListener('dragend', handleDragEnd);
-            
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                cell.addEventListener('dragover', handleDragOver);
-                cell.addEventListener('drop', handleDrop);
-                cell.addEventListener('dragenter', handleDragEnter);
-                cell.addEventListener('dragleave', handleDragLeave);
-            });
-        }
+        self.btn_open = tk.Button(self.frame_buttons, text="Buka File Terenkripsi", command=self.buka_file, bg="#ddd")
+        self.btn_open.pack(side=tk.LEFT, padx=10)
 
-        // Drag and drop event handlers
-        function handleDragStart(e) {
-            e.dataTransfer.setData('text/plain', 'block');
-            e.target.classList.add('dragging');
-            
-            // Show valid placement highlights
-            highlightValidPlacements();
-        }
+        self.btn_save = tk.Button(self.frame_buttons, text="Simpan & Enkripsi", command=self.simpan_file, bg="#4CAF50", fg="white")
+        self.btn_save.pack(side=tk.LEFT, padx=10)
+        
+        self.btn_clear = tk.Button(self.frame_buttons, text="Bersihkan", command=self.bersihkan, bg="#f44336", fg="white")
+        self.btn_clear.pack(side=tk.LEFT, padx=10)
 
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            
-            // Remove all highlights
-            removeHighlights();
-        }
+        # Status Bar
+        self.status = tk.Label(root, text="Siap.", bd=1, relief=tk.SUNKEN, anchor=tk.W)
+        self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
+    def generate_key_from_password(self, password):
+        """
+        Inti Keamanan:
+        Menggunakan SHA-512 untuk mengubah password text menjadi 
+        kunci 32-byte yang valid untuk Enkripsi Fernet (AES).
+        """
+        if not password:
+            return None
+        
+        # 1. Hashing password dengan SHA-512
+        digest = hashlib.sha512(password.encode('utf-8')).digest()
+        
+        # 2. Fernet membutuhkan kunci 32 byte yang di-encode base64.
+        # SHA-512 menghasilkan 64 byte, kita ambil 32 byte pertama saja.
+        key_bytes = digest[:32]
+        
+        # 3. Encode ke format URL-safe Base64 agar bisa dipakai Fernet
+        key = base64.urlsafe_b64encode(key_bytes)
+        return key
 
-        function handleDragEnter(e) {
-            e.preventDefault();
-            if (!gameState.gameActive) return;
-            
-            const cell = e.target;
-            if (cell.classList.contains('cell')) {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                
-                // Check if placement is valid
-                if (canPlaceBlock(gameState.currentBlock, row, col)) {
-                    cell.classList.add('highlight');
-                } else {
-                    cell.classList.add('shake');
-                    setTimeout(() => cell.classList.remove('shake'), 300);
-                }
-            }
-        }
+    def simpan_file(self):
+        password = self.entry_password.get()
+        if not password:
+            messagebox.showwarning("Peringatan", "Masukkan password untuk mengenkripsi!")
+            return
 
-        function handleDragLeave(e) {
-            const cell = e.target;
-            if (cell.classList.contains('cell')) {
-                cell.classList.remove('highlight');
-                cell.classList.remove('shake');
-            }
-        }
+        isi_catatan = self.text_area.get("1.0", tk.END).strip()
+        if not isi_catatan:
+            messagebox.showwarning("Peringatan", "Catatan kosong, tidak ada yang disimpan.")
+            return
 
-        function handleDrop(e) {
-            e.preventDefault();
-            if (!gameState.gameActive) return;
-            
-            const cell = e.target;
-            if (!cell.classList.contains('cell')) return;
-            
-            const row = parseInt(cell.dataset.row);
-            const col = parseInt(cell.dataset.col);
-            
-            // Try to place the block
-            placeBlock(gameState.currentBlock, row, col);
-        }
+        # Generate Kunci
+        kunci = self.generate_key_from_password(password)
+        f = Fernet(kunci)
 
-        // Highlight valid placements for the current block
-        function highlightValidPlacements() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                
-                if (canPlaceBlock(gameState.currentBlock, row, col)) {
-                    cell.classList.add('highlight');
-                }
-            });
-        }
+        # Proses Enkripsi
+        try:
+            data_terenkripsi = f.encrypt(isi_catatan.encode('utf-8'))
+            
+            # Dialog Simpan File
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".sha",
+                filetypes=[("SHA Notes Encrypted", "*.sha"), ("All Files", "*.*")]
+            )
+            
+            if file_path:
+                with open(file_path, "wb") as file:
+                    file.write(data_terenkripsi)
+                self.status.config(text=f"Berhasil disimpan: {os.path.basename(file_path)}")
+                messagebox.showinfo("Sukses", "File berhasil disimpan dan dienkripsi!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Gagal menyimpan: {str(e)}")
 
-        // Remove all highlights
-        function removeHighlights() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                cell.classList.remove('highlight');
-                cell.classList.remove('shake');
-            });
-        }
+    def buka_file(self):
+        password = self.entry_password.get()
+        if not password:
+            messagebox.showwarning("Peringatan", "Masukkan password untuk mendekripsi file!")
+            return
 
-        // Check if a block can be placed at a specific position
-        function canPlaceBlock(block, row, col) {
-            const blockRows = block.shape.length;
-            const blockCols = block.shape[0].length;
-            
-            // Check if block fits within board boundaries
-            if (row + blockRows > config.boardSize || col + blockCols > config.boardSize) {
-                return false;
-            }
-            
-            // Check if cells are empty
-            for (let r = 0; r < blockRows; r++) {
-                for (let c = 0; c < blockCols; c++) {
-                    if (block.shape[r][c] && gameState.board[row + r][col + c] !== 0) {
-                        return false;
-                    }
-                }
-            }
-            
-            return true;
-        }
+        file_path = filedialog.askopenfilename(
+            filetypes=[("SHA Notes Encrypted", "*.sha"), ("All Files", "*.*")]
+        )
 
-        // Place a block on the board
-        function placeBlock(block, row, col) {
-            if (!canPlaceBlock(block, row, col)) {
-                // Play error sound effect (simulated)
-                playSound('error');
-                return false;
-            }
-            
-            // Save current state for undo
-            saveStateForUndo();
-            
-            const blockRows = block.shape.length;
-            const blockCols = block.shape[0].length;
-            
-            // Place the block
-            for (let r = 0; r < blockRows; r++) {
-                for (let c = 0; c < blockCols; c++) {
-                    if (block.shape[r][c]) {
-                        gameState.board[row + r][col + c] = block.color + 1;
-                    }
-                }
-            }
-            
-            // Play placement sound
-            playSound('place');
-            
-            // Update the display
-            updateBoardDisplay();
-            
-            // Check for completed lines
-            checkLines();
-            
-            // Generate a new block
-            generateNewBlock();
-            
-            // Check if game is over
-            if (!hasValidMoves()) {
-                gameOver();
-            }
-            
-            updateDisplay();
-            return true;
-        }
+        if not file_path:
+            return
 
-        // Save current state for undo functionality
-        function saveStateForUndo() {
-            // Save a deep copy of the board
-            const boardCopy = gameState.board.map(row => [...row]);
-            gameState.blockHistory.push({
-                board: boardCopy,
-                score: gameState.score,
-                linesCleared: gameState.linesCleared,
-                level: gameState.level
-            });
-            
-            // Keep only last 10 moves
-            if (gameState.blockHistory.length > 10) {
-                gameState.blockHistory.shift();
-            }
-        }
+        # Generate Kunci dari password saat ini
+        kunci = self.generate_key_from_password(password)
+        f = Fernet(kunci)
 
-        // Undo last move
-        function undo() {
-            if (gameState.blockHistory.length === 0 || !gameState.gameActive) return;
+        try:
+            with open(file_path, "rb") as file:
+                data_terenkripsi = file.read()
             
-            const lastState = gameState.blockHistory.pop();
-            gameState.board = lastState.board.map(row => [...row]);
-            gameState.score = lastState.score;
-            gameState.linesCleared = lastState.linesCleared;
-            gameState.level = lastState.level;
+            # Proses Dekripsi
+            data_asli = f.decrypt(data_terenkripsi).decode('utf-8')
             
-            updateBoardDisplay();
-            updateDisplay();
-            playSound('undo');
-        }
+            # Tampilkan ke layar
+            self.text_area.delete("1.0", tk.END)
+            self.text_area.insert("1.0", data_asli)
+            self.status.config(text=f"Berhasil membuka: {os.path.basename(file_path)}")
+            
+        except InvalidToken:
+            messagebox.showerror("Gagal", "Password Salah! File tidak dapat didekripsi.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Terjadi kesalahan: {str(e)}")
 
-        // Check for completed lines
-        function checkLines() {
-            let linesCleared = 0;
-            const rowsToClear = [];
-            
-            // Check each row
-            for (let row = 0; row < config.boardSize; row++) {
-                let rowFull = true;
-                for (let col = 0; col < config.boardSize; col++) {
-                    if (gameState.board[row][col] === 0) {
-                        rowFull = false;
-                        break;
-                    }
-                }
-                
-                if (rowFull) {
-                    rowsToClear.push(row);
-                    linesCleared++;
-                }
-            }
-            
-            // If lines were cleared
-            if (linesCleared > 0) {
-                // Update combo
-                gameState.combo++;
-                
-                // Calculate score
-                const basePoints = linesCleared * config.boardSize * config.pointsPerCell;
-                const comboMultiplier = 1 + (gameState.combo - 1) * 0.5;
-                const levelMultiplier = 1 + (gameState.level - 1) * 0.2;
-                const points = Math.floor(basePoints * comboMultiplier * levelMultiplier);
-                
-                gameState.score += points;
-                gameState.linesCleared += linesCleared;
-                
-                // Check for level up
-                if (gameState.linesCleared >= gameState.level * config.levelUpLines) {
-                    gameState.level++;
-                    showAchievement(`Level Up! Now at level ${gameState.level}`);
-                }
-                
-                // Show combo message
-                if (gameState.combo > 1) {
-                    showCombo(gameState.combo, linesCleared);
-                }
-                
-                // Clear the lines with animation
-                clearLinesWithAnimation(rowsToClear);
-                
-                // Play clear sound
-                playSound('clear');
-                
-                // Create particle effects
-                createParticlesForLines(rowsToClear);
-            } else {
-                // Reset combo if no lines cleared
-                gameState.combo = 0;
-            }
-        }
+    def bersihkan(self):
+        self.text_area.delete("1.0", tk.END)
+        self.entry_password.delete(0, tk.END)
+        self.status.config(text="Siap.")
 
-        // Clear lines with animation
-        function clearLinesWithAnimation(rows) {
-            // Mark cells for clearing
-            rows.forEach(row => {
-                for (let col = 0; col < config.boardSize; col++) {
-                    const cellIndex = row * config.boardSize + col;
-                    const cell = gameBoard.children[cellIndex];
-                    cell.classList.add('clearing');
-                }
-            });
-            
-            // After animation completes, remove the lines
-            setTimeout(() => {
-                // Remove cleared rows
-                rows.sort((a, b) => a - b);
-                rows.forEach(row => {
-                    gameState.board.splice(row, 1);
-                    gameState.board.unshift(new Array(config.boardSize).fill(0));
-                });
-                
-                // Update the display
-                updateBoardDisplay();
-            }, 500);
-        }
-
-        // Create particle effects for cleared lines
-        function createParticlesForLines(rows) {
-            rows.forEach(row => {
-                for (let col = 0; col < config.boardSize; col++) {
-                    const cellIndex = row * config.boardSize + col;
-                    const cell = gameBoard.children[cellIndex];
-                    const rect = cell.getBoundingClientRect();
-                    
-                    // Create 5 particles per cell
-                    for (let i = 0; i < 5; i++) {
-                        createParticle(
-                            rect.left + rect.width / 2,
-                            rect.top + rect.height / 2,
-                            config.colors[gameState.board[row][col] - 1]
-                        );
-                    }
-                }
-            });
-        }
-
-        // Create a particle effect
-        function createParticle(x, y, colorClass) {
-            const particle = document.createElement('div');
-            particle.className = `particle ${colorClass}`;
-            particle.style.left = `${x}px`;
-            particle.style.top = `${y}px`;
-            
-            // Random direction and speed
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 2 + Math.random() * 3;
-            const vx = Math.cos(angle) * speed;
-            const vy = Math.sin(angle) * speed;
-            
-            document.body.appendChild(particle);
-            
-            // Animate the particle
-            let opacity = 1;
-            const animate = () => {
-                opacity -= 0.02;
-                x += vx;
-                y += vy;
-                
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-                particle.style.opacity = opacity;
-                
-                if (opacity > 0) {
-                    requestAnimationFrame(animate);
-                } else {
-                    particle.remove();
-                }
-            };
-            
-            animate();
-        }
-
-        // Show combo message
-        function showCombo(combo, lines) {
-            comboDisplay.textContent = `${lines} LINES! COMBO x${combo}`;
-            comboDisplay.style.opacity = '1';
-            
-            setTimeout(() => {
-                comboDisplay.style.opacity = '0';
-            }, 1000);
-        }
-
-        // Show achievement toast
-        function showAchievement(message) {
-            const toast = document.createElement('div');
-            toast.className = 'achievement-toast';
-            toast.innerHTML = `<i class="fas fa-trophy"></i> <div>${message}</div>`;
-            
-            document.body.appendChild(toast);
-            
-            // Trigger animation
-            setTimeout(() => toast.classList.add('show'), 10);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-        // Update the board display
-        function updateBoardDisplay() {
-            const cells = document.querySelectorAll('.cell');
-            
-            for (let row = 0; row < config.boardSize; row++) {
-                for (let col = 0; col < config.boardSize; col++) {
-                    const cellIndex = row * config.boardSize + col;
-                    const cell = cells[cellIndex];
-                    
-                    // Reset cell classes
-                    cell.className = 'cell';
-                    
-                    // Set color if filled
-                    if (gameState.board[row][col] > 0) {
-                        const colorIndex = gameState.board[row][col] - 1;
-                        cell.classList.add('filled', config.colors[colorIndex]);
-                    }
-                }
-            }
-        }
-
-        // Update all display elements
-        function updateDisplay() {
-            scoreElement.textContent = gameState.score;
-            levelElement.textContent = gameState.level;
-            linesElement.textContent = gameState.linesCleared;
-            comboElement.textContent = gameState.combo > 0 ? `${gameState.combo}x` : '1x';
-            currentScoreElement.textContent = gameState.score;
-            
-            // Update timer for time attack mode
-            if (gameState.gameMode === 'time') {
-                timerElement.textContent = `${gameState.timeLeft}s`;
-                if (gameState.timeLeft <= 10) {
-                    timerElement.classList.add('warning');
-                } else {
-                    timerElement.classList.remove('warning');
-                }
-            }
-        }
-
-        // Check if there are any valid moves left
-        function hasValidMoves() {
-            // Check if current block can be placed anywhere
-            for (let row = 0; row < config.boardSize; row++) {
-                for (let col = 0; col < config.boardSize; col++) {
-                    if (canPlaceBlock(gameState.currentBlock, row, col)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        // Game over function
-        function gameOver() {
-            gameState.gameActive = false;
-            
-            // Stop timer if in time attack mode
-            if (gameState.timerInterval) {
-                clearInterval(gameState.timerInterval);
-            }
-            
-            // Show game over message
-            setTimeout(() => {
-                alert(`Game Over!\nFinal Score: ${gameState.score}\nLevel: ${gameState.level}\nLines Cleared: ${gameState.linesCleared}`);
-                
-                // Update leaderboard if score is high enough
-                updateLeaderboard();
-            }, 500);
-        }
-
-        // Update leaderboard
-        function updateLeaderboard() {
-            // In a real game, this would save to a server
-            // For now, we'll just update the local display
-            const entries = document.querySelectorAll('.leaderboard-entry');
-            if (gameState.score > 1250) {
-                entries[0].innerHTML = `1. YOU: <span style="color:#ffcc00">${gameState.score}</span>`;
-                entries[1].textContent = '2. Player2: 1250';
-            }
-        }
-
-        // Start time attack mode
-        function startTimeAttack() {
-            gameState.timeLeft = 60;
-            timerElement.style.display = 'block';
-            updateDisplay();
-            
-            // Clear any existing timer
-            if (gameState.timerInterval) {
-                clearInterval(gameState.timerInterval);
-            }
-            
-            // Start new timer
-            gameState.timerInterval = setInterval(() => {
-                gameState.timeLeft--;
-                updateDisplay();
-                
-                if (gameState.timeLeft <= 0) {
-                    clearInterval(gameState.timerInterval);
-                    gameOver();
-                }
-            }, 1000);
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Undo button
-            document.getElementById('undo-btn').addEventListener('click', undo);
-            
-            // Hint button
-            document.getElementById('hint-btn').addEventListener('click', showHint);
-            
-            // Restart button
-            document.getElementById('restart-btn').addEventListener('click', restartGame);
-            
-            // Game mode buttons
-            document.getElementById('mode-classic').addEventListener('click', () => switchGameMode('classic'));
-            document.getElementById('mode-time').addEventListener('click', () => switchGameMode('time'));
-            document.getElementById('mode-daily').addEventListener('click', () => switchGameMode('daily'));
-        }
-
-        // Show hint for valid placement
-        function showHint() {
-            if (!gameState.gameActive) return;
-            
-            // Find a valid placement
-            for (let row = 0; row < config.boardSize; row++) {
-                for (let col = 0; col < config.boardSize; col++) {
-                    if (canPlaceBlock(gameState.currentBlock, row, col)) {
-                        // Highlight the cell
-                        const cellIndex = row * config.boardSize + col;
-                        const cell = gameBoard.children[cellIndex];
-                        
-                        cell.classList.add('highlight');
-                        setTimeout(() => cell.classList.remove('highlight'), 1000);
-                        
-                        // Play hint sound
-                        playSound('hint');
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Switch game mode
-        function switchGameMode(mode) {
-            gameState.gameMode = mode;
-            
-            // Update active button
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`mode-${mode}`).classList.add('active');
-            
-            // Hide timer if not in time attack mode
-            if (mode !== 'time') {
-                timerElement.style.display = 'none';
-                if (gameState.timerInterval) {
-                    clearInterval(gameState.timerInterval);
-                    gameState.timerInterval = null;
-                }
-            }
-            
-            // Restart game with new mode
-            restartGame();
-        }
-
-        // Restart the game
-        function restartGame() {
-            // Reset game state
-            gameState = {
-                board: [],
-                score: 0,
-                level: 1,
-                linesCleared: 0,
-                currentBlock: null,
-                nextBlock: null,
-                combo: 0,
-                gameMode: gameState.gameMode,
-                gameActive: true,
-                timeLeft: 60,
-                timerInterval: null,
-                lastPlacedBlock: null,
-                blockHistory: []
-            };
-            
-            // Reinitialize game
-            createBoard();
-            generateNewBlock();
-            updateDisplay();
-            
-            // Start timer if in time attack mode
-            if (gameState.gameMode === 'time') {
-                startTimeAttack();
-            }
-            
-            playSound('restart');
-        }
-
-        // Play sound effects (simulated with Web Audio API)
-        function playSound(type) {
-            // In a real implementation, you would load actual sound files
-            // For this demo, we'll just log the sound type
-            console.log(`Playing sound: ${type}`);
-            
-            // Simple beep sounds using Web Audio API
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // Set sound parameters based on type
-                switch(type) {
-                    case 'place':
-                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                        break;
-                    case 'clear':
-                        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
-                        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-                        break;
-                    case 'error':
-                        oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
-                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                        break;
-                    case 'hint':
-                        oscillator.frequency.setValueAtTime(784, audioContext.currentTime); // G5
-                        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-                        break;
-                    case 'undo':
-                        oscillator.frequency.setValueAtTime(392, audioContext.currentTime); // G4
-                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                        break;
-                    case 'restart':
-                        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-                        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-                        break;
-                }
-                
-                oscillator.start();
-                
-                // Stop after short duration
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-                oscillator.stop(audioContext.currentTime + 0.1);
-            } catch (e) {
-                // Audio not supported or error
-                console.log("Audio not supported");
-            }
-        }
-
-        // Initialize the game when page loads
-        window.addEventListener('DOMContentLoaded', initGame);
-    </script>
-</body>
-</html>
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = SHANotesApp(root)
+    root.mainloop()
