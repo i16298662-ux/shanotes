@@ -1,144 +1,215 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext
-import hashlib
-import base64
-from cryptography.fernet import Fernet, InvalidToken
-import os
-
-class SHANotesApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("SHA-Notes (Secure Encryption)")
-        self.root.geometry("600x500")
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHA-Notes | Encrypted Notepad</title>
+    <!-- Memuat Library Kriptografi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 {
+            text-align: center;
+            color: #00ff88;
+            margin-top: 0;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="password"], textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: #3d3d3d;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+            box-sizing: border-box; /* Agar padding tidak melebar */
+        }
+        textarea {
+            height: 200px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-save { background-color: #0088ff; color: white; }
+        .btn-save:hover { background-color: #0066cc; }
         
-        # --- UI Layout ---
-        
-        # Label Judul
-        self.label_title = tk.Label(root, text="SHA-Notes", font=("Arial", 16, "bold"))
-        self.label_title.pack(pady=10)
+        .btn-load { background-color: #ff9900; color: white; }
+        .btn-load:hover { background-color: #cc7a00; }
 
-        # Input Password Frame
-        self.frame_auth = tk.Frame(root)
-        self.frame_auth.pack(pady=5)
-        
-        tk.Label(self.frame_auth, text="Password Kunci:").pack(side=tk.LEFT, padx=5)
-        self.entry_password = tk.Entry(self.frame_auth, show="*", width=30)
-        self.entry_password.pack(side=tk.LEFT, padx=5)
+        .btn-clear { background-color: #ff4444; color: white; }
+        .btn-clear:hover { background-color: #cc0000; }
 
-        # Area Teks Utama
-        self.text_area = scrolledtext.ScrolledText(root, width=70, height=20)
-        self.text_area.pack(pady=10, padx=10)
+        .status {
+            margin-top: 15px;
+            font-size: 0.9em;
+            text-align: center;
+            color: #aaa;
+        }
+        /* Hidden file input */
+        #fileInput { display: none; }
+    </style>
+</head>
+<body>
 
-        # Tombol Aksi
-        self.frame_buttons = tk.Frame(root)
-        self.frame_buttons.pack(pady=10)
+<div class="container">
+    <h2>SHA-Notes 🔒</h2>
+    <p style="text-align: center; font-size: 0.8em; color: #888;">SHA-512 Key Derivation + AES Encryption</p>
 
-        self.btn_open = tk.Button(self.frame_buttons, text="Buka File Terenkripsi", command=self.buka_file, bg="#ddd")
-        self.btn_open.pack(side=tk.LEFT, padx=10)
+    <div class="control-group">
+        <label for="password">Password Kunci:</label>
+        <input type="password" id="password" placeholder="Masukkan password rahasia...">
+    </div>
 
-        self.btn_save = tk.Button(self.frame_buttons, text="Simpan & Enkripsi", command=self.simpan_file, bg="#4CAF50", fg="white")
-        self.btn_save.pack(side=tk.LEFT, padx=10)
-        
-        self.btn_clear = tk.Button(self.frame_buttons, text="Bersihkan", command=self.bersihkan, bg="#f44336", fg="white")
-        self.btn_clear.pack(side=tk.LEFT, padx=10)
+    <div class="control-group">
+        <label for="note">Isi Catatan:</label>
+        <textarea id="note" placeholder="Tulis catatan rahasia di sini..."></textarea>
+    </div>
 
-        # Status Bar
-        self.status = tk.Label(root, text="Siap.", bd=1, relief=tk.SUNKEN, anchor=tk.W)
-        self.status.pack(side=tk.BOTTOM, fill=tk.X)
+    <div class="btn-group">
+        <button class="btn-load" onclick="triggerLoad()">📂 Buka File</button>
+        <button class="btn-save" onclick="saveFile()">💾 Simpan & Enkripsi</button>
+        <button class="btn-clear" onclick="clearAll()">❌ Bersihkan</button>
+    </div>
+    
+    <div class="status" id="statusMsg">Siap.</div>
+    
+    <!-- Input file tersembunyi -->
+    <input type="file" id="fileInput" onchange="loadFile(this)">
+</div>
 
-    def generate_key_from_password(self, password):
-        """
-        Inti Keamanan:
-        Menggunakan SHA-512 untuk mengubah password text menjadi 
-        kunci 32-byte yang valid untuk Enkripsi Fernet (AES).
-        """
-        if not password:
-            return None
-        
-        # 1. Hashing password dengan SHA-512
-        digest = hashlib.sha512(password.encode('utf-8')).digest()
-        
-        # 2. Fernet membutuhkan kunci 32 byte yang di-encode base64.
-        # SHA-512 menghasilkan 64 byte, kita ambil 32 byte pertama saja.
-        key_bytes = digest[:32]
-        
-        # 3. Encode ke format URL-safe Base64 agar bisa dipakai Fernet
-        key = base64.urlsafe_b64encode(key_bytes)
-        return key
+<script>
+    // --- Logika Inti ---
 
-    def simpan_file(self):
-        password = self.entry_password.get()
-        if not password:
-            messagebox.showwarning("Peringatan", "Masukkan password untuk mengenkripsi!")
-            return
+    // Fungsi Pembantu: Mengubah password menjadi Key menggunakan SHA-512
+    function getKeyFromPassword(password) {
+        // Ini memenuhi permintaan Anda: Menggunakan SHA-512 untuk memproses password
+        return CryptoJS.SHA512(password).toString();
+    }
 
-        isi_catatan = self.text_area.get("1.0", tk.END).strip()
-        if not isi_catatan:
-            messagebox.showwarning("Peringatan", "Catatan kosong, tidak ada yang disimpan.")
-            return
+    function saveFile() {
+        const password = document.getElementById('password').value;
+        const text = document.getElementById('note').value;
 
-        # Generate Kunci
-        kunci = self.generate_key_from_password(password)
-        f = Fernet(kunci)
+        if (!password) {
+            alert("⚠️ Masukkan password terlebih dahulu!");
+            return;
+        }
+        if (!text) {
+            alert("⚠️ Catatan kosong!");
+            return;
+        }
 
-        # Proses Enkripsi
-        try:
-            data_terenkripsi = f.encrypt(isi_catatan.encode('utf-8'))
+        try {
+            // 1. Buat Key dari SHA-512
+            const key = getKeyFromPassword(password);
             
-            # Dialog Simpan File
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".sha",
-                filetypes=[("SHA Notes Encrypted", "*.sha"), ("All Files", "*.*")]
-            )
+            // 2. Enkripsi teks menggunakan AES dengan Key tersebut
+            const encrypted = CryptoJS.AES.encrypt(text, key).toString();
+
+            // 3. Download file
+            const blob = new Blob([encrypted], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "catatan_rahasia.sha"; // Ekstensi file
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             
-            if file_path:
-                with open(file_path, "wb") as file:
-                    file.write(data_terenkripsi)
-                self.status.config(text=f"Berhasil disimpan: {os.path.basename(file_path)}")
-                messagebox.showinfo("Sukses", "File berhasil disimpan dan dienkripsi!")
-        except Exception as e:
-            messagebox.showerror("Error", f"Gagal menyimpan: {str(e)}")
+            setStatus("✅ Berhasil dienkripsi dan didownload.");
+        } catch (e) {
+            alert("Error: " + e);
+        }
+    }
 
-    def buka_file(self):
-        password = self.entry_password.get()
-        if not password:
-            messagebox.showwarning("Peringatan", "Masukkan password untuk mendekripsi file!")
-            return
+    function triggerLoad() {
+        document.getElementById('fileInput').click();
+    }
 
-        file_path = filedialog.askopenfilename(
-            filetypes=[("SHA Notes Encrypted", "*.sha"), ("All Files", "*.*")]
-        )
+    function loadFile(input) {
+        const file = input.files[0];
+        const password = document.getElementById('password').value;
 
-        if not file_path:
-            return
+        if (!password) {
+            alert("⚠️ Masukkan password DULU sebelum membuka file!");
+            input.value = ""; // Reset input file
+            return;
+        }
+        if (!file) return;
 
-        # Generate Kunci dari password saat ini
-        kunci = self.generate_key_from_password(password)
-        f = Fernet(kunci)
-
-        try:
-            with open(file_path, "rb") as file:
-                data_terenkripsi = file.read()
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const encryptedContent = e.target.result;
             
-            # Proses Dekripsi
-            data_asli = f.decrypt(data_terenkripsi).decode('utf-8')
-            
-            # Tampilkan ke layar
-            self.text_area.delete("1.0", tk.END)
-            self.text_area.insert("1.0", data_asli)
-            self.status.config(text=f"Berhasil membuka: {os.path.basename(file_path)}")
-            
-        except InvalidToken:
-            messagebox.showerror("Gagal", "Password Salah! File tidak dapat didekripsi.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Terjadi kesalahan: {str(e)}")
+            try {
+                // 1. Buat Key dari SHA-512 (harus sama dengan saat menyimpan)
+                const key = getKeyFromPassword(password);
 
-    def bersihkan(self):
-        self.text_area.delete("1.0", tk.END)
-        self.entry_password.delete(0, tk.END)
-        self.status.config(text="Siap.")
+                // 2. Dekripsi
+                const decryptedBytes = CryptoJS.AES.decrypt(encryptedContent, key);
+                const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = SHANotesApp(root)
-    root.mainloop()
+                if (!decryptedText) {
+                    throw new Error("Password salah atau file rusak");
+                }
+
+                document.getElementById('note').value = decryptedText;
+                setStatus("✅ File berhasil dibuka!");
+            } catch (error) {
+                alert("❌ GAGAL! Password salah atau bukan file SHA-Notes.");
+                setStatus("Gagal mendekripsi.");
+            }
+        };
+        reader.readAsText(file);
+        input.value = ""; // Reset agar bisa pilih file yang sama lagi
+    }
+
+    function clearAll() {
+        document.getElementById('note').value = "";
+        document.getElementById('password').value = "";
+        setStatus("Siap.");
+    }
+
+    function setStatus(msg) {
+        document.getElementById('statusMsg').innerText = msg;
+    }
+</script>
+
+</body>
+</html>
